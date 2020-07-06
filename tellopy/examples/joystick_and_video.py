@@ -143,6 +143,47 @@ class JoystickF310:
     RIGHT_Y_REVERSE = -1.0
     DEADZONE = 0.08
 
+class JoystickX360:
+
+    #event types
+    #10 is JOYBUTTONDOWN
+    #11 is JOYBUTTONUP
+    #9 is JOYHATMOTION, e.g. the dpad. It sends e.value = (0,0) representing x,y. Hardcoded to up/down,cw/ccw below.
+    #7 is JOYAXISMOTION. Joysticks and triggers
+    # axis 1/0 are left stick. axis 4/3 are right stick. axis 2 is the triggers, negative values mean left trigger, postive mean right
+    # joysticks feel very twitchy. Might be updating too frequently. 
+    # Also check out the update() helper. Suspiciously zeroing out inputs if the delta is too high.
+
+    # d-pad
+    UP = 1000  # UP handle_input_event() expects this to be set, even if we don't want a button assigned to it. Give it a dummy value for now.
+    DOWN = 1001  # DOWN handle_input_event() expects this to be set, even if we don't want a button assigned to it. Give it a dummy value for now.
+    ROTATE_LEFT = 4  # LEFT Bumper
+    ROTATE_RIGHT = 5  # RIGHT Bumper
+
+    # bumper triggers
+    TAKEOFF = 9  # Right Thumbstick Down
+    LAND = 8  # Left Thumbstick Down
+    # UNUSED = 7 #RT
+    # UNUSED = 6 #LT
+
+    # buttons
+
+    FORWARD = 3  # Y
+    BACKWARD = 0  # A
+    LEFT = 2  # X
+    RIGHT = 1  # B
+
+    # axis
+    LEFT_X = 0 # Left joystick, cw/ccw
+    LEFT_Y = 2 # Triggers, up/down
+    RIGHT_X = 4 # Right joystick, left/right
+    RIGHT_Y = 3 # Right joystick forward/back
+    LEFT_X_REVERSE = 1.0
+    LEFT_Y_REVERSE = -1.0
+    RIGHT_X_REVERSE = 1.0
+    RIGHT_Y_REVERSE = -1.0
+    DEADZONE = 0.09
+
 class JoystickXONE:
     # d-pad
     UP = 0  # UP
@@ -318,8 +359,7 @@ def handle_input_event(drone, e):
             yaw = update(yaw, e.value * buttons.LEFT_X_REVERSE)
             drone.set_yaw(yaw)
         if e.axis == buttons.RIGHT_Y:
-            pitch = update(pitch, e.value *
-                           buttons.RIGHT_Y_REVERSE)
+            pitch = update(pitch, e.value * buttons.RIGHT_Y_REVERSE)
             drone.set_pitch(pitch)
         if e.axis == buttons.RIGHT_X:
             roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
@@ -455,6 +495,8 @@ def main():
             buttons = JoystickF310
         elif js_name == 'Xbox One Wired Controller':
             buttons = JoystickXONE
+        elif js_name == 'Controller (XBOX 360 For Windows)':
+            buttons = JoystickX360
         elif js_name == 'Microsoft X-Box One S pad':
             buttons = JoystickXONES
         elif js_name == 'Xbox Wireless Controller':
