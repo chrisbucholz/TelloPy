@@ -338,7 +338,10 @@ def update(old, new, max_delta=0.3):
     if abs(old - new) <= max_delta:
         res = new
     else:
-        res = 0.0
+        if old < new:
+            res = old + max_delta
+        else:
+            res = old - max_delta
     return res
 
 
