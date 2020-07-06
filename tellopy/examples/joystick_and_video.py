@@ -174,10 +174,12 @@ class JoystickX360:
     RIGHT = 1  # B
 
     # axis
-    LEFT_X = 0 # Left joystick, cw/ccw
+    # LEFT_X, LEFT_Y refers to the Tello API's idea of an internal joystick. Hardcoded on their side to rotate/up+down
+    # RIGHT_X, RIGHT_Y refer to Tello API's left+right/forward+back
+    LEFT_X = 4 # Right joystick, cw/ccw
     LEFT_Y = 2 # Triggers, up/down
-    RIGHT_X = 4 # Right joystick, left/right
-    RIGHT_Y = 3 # Right joystick forward/back
+    RIGHT_X = 0 # Left joystick, left/right
+    RIGHT_Y = 1 # Left joystick forward/back
     LEFT_X_REVERSE = 1.0
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
