@@ -184,7 +184,7 @@ class JoystickX360:
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
     RIGHT_Y_REVERSE = -1.0
-    DEADZONE = 0.09
+    DEADZONE = 0.27
 
 class JoystickXONE:
     # d-pad
