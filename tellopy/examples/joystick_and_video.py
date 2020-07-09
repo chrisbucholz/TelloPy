@@ -353,22 +353,32 @@ def handle_input_event(drone, e):
     global yaw
     global pitch
     global roll
+    zeroed = False
     if e.type == pygame.locals.JOYAXISMOTION:
         # ignore small input values (Deadzone)
         if -buttons.DEADZONE <= e.value and e.value <= buttons.DEADZONE:
             e.value = 0.0
+            zeroed = True
         if e.axis == buttons.LEFT_Y:
             throttle = update(throttle, e.value * buttons.LEFT_Y_REVERSE)
             drone.set_throttle(throttle)
+            if zeroed:
+                drone.up(0)
         if e.axis == buttons.LEFT_X:
             yaw = update(yaw, e.value * buttons.LEFT_X_REVERSE)
             drone.set_yaw(yaw)
+            if zeroed:
+                drone.clockwise(0)
         if e.axis == buttons.RIGHT_Y:
             pitch = update(pitch, e.value * buttons.RIGHT_Y_REVERSE)
             drone.set_pitch(pitch)
+            if zeroed:
+                drone.forward(0)
         if e.axis == buttons.RIGHT_X:
             roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
             drone.set_roll(roll)
+            if zeroed:
+                drone.left(0)
     elif e.type == pygame.locals.JOYHATMOTION:
         if e.value[0] < 0:
             drone.counter_clockwise(speed)
