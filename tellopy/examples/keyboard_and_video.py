@@ -381,11 +381,7 @@ def main():
     pygame.display.set_mode((1280, 720))
     pygame.font.init()
     global buttons
-    #global run_recv_thread
-    #global new_image
-    #pygame.init()
     pygame.joystick.init()
-    #current_image = None
 
     global font
     font = pygame.font.SysFont("dejavusansmono", 32)
