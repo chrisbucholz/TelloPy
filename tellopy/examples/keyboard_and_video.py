@@ -33,12 +33,168 @@ from subprocess import Popen, PIPE
 
 # log = tellopy.logger.Logger('TelloUI')
 
+
+class JoystickX360:
+
+    #event types
+    #10 is JOYBUTTONDOWN
+    #11 is JOYBUTTONUP
+    #9 is JOYHATMOTION, e.g. the dpad. It sends e.value = (0,0) representing x,y. Hardcoded to up/down,cw/ccw below.
+    #7 is JOYAXISMOTION. Joysticks and triggers
+    # axis 1/0 are left stick. axis 4/3 are right stick. axis 2 is the triggers, negative values mean left trigger, postive mean right
+    # joysticks feel very twitchy. Might be updating too frequently. 
+    # Also check out the update() helper. Suspiciously zeroing out inputs if the delta is too high.
+
+    # d-pad
+    UP = 1000  # UP handle_input_event() expects this to be set, even if we don't want a button assigned to it. Give it a dummy value for now.
+    DOWN = 1001  # DOWN handle_input_event() expects this to be set, even if we don't want a button assigned to it. Give it a dummy value for now.
+    ROTATE_LEFT = 4  # LEFT Bumper
+    ROTATE_RIGHT = 5  # RIGHT Bumper
+
+    # bumper triggers
+    TAKEOFF = 9  # Right Thumbstick Down
+    LAND = 8  # Left Thumbstick Down
+    # UNUSED = 7 #RT
+    # UNUSED = 6 #LT
+
+    # buttons
+
+    FORWARD = 3  # Y
+    BACKWARD = 0  # A
+    LEFT = 2  # X
+    RIGHT = 1  # B
+
+    # axis
+    # LEFT_X, LEFT_Y refers to the Tello API's idea of an internal joystick. Hardcoded on their side to rotate/up+down
+    # RIGHT_X, RIGHT_Y refer to Tello API's left+right/forward+back
+    LEFT_X = 4 # Right joystick, cw/ccw
+    LEFT_Y = 2 # Triggers, up/down
+    RIGHT_X = 0 # Left joystick, left/right
+    RIGHT_Y = 1 # Left joystick forward/back
+    LEFT_X_REVERSE = 1.0
+    LEFT_Y_REVERSE = -1.0
+    RIGHT_X_REVERSE = 1.0
+    RIGHT_Y_REVERSE = -1.0
+    DEADZONE = 0.27
+
+
 prev_flight_data = None
 video_player = None
 video_recorder = None
 font = None
 wid = None
 date_fmt = '%Y-%m-%d_%H%M%S'
+
+
+#run_recv_thread = True
+#new_image = None
+#flight_data = None
+#log_data = None
+buttons = None
+speed = 100
+throttle = 0.0
+yaw = 0.0
+pitch = 0.0
+roll = 0.0
+
+def update(old, new, max_delta=0.3):
+    if abs(old - new) <= max_delta:
+        res = new
+    else:
+        if old < new:
+            res = old + max_delta
+        else:
+            res = old - max_delta
+    return res
+
+
+def handle_input_event(drone, e):
+    global speed
+    global throttle
+    global yaw
+    global pitch
+    global roll
+    zeroed = False
+    if e.type == pygame.locals.JOYAXISMOTION:
+        # ignore small input values (Deadzone)
+        if -buttons.DEADZONE <= e.value and e.value <= buttons.DEADZONE:
+            e.value = 0.0
+            zeroed = True
+        if e.axis == buttons.LEFT_Y:
+            throttle = update(throttle, e.value * buttons.LEFT_Y_REVERSE)
+            drone.set_throttle(throttle)
+            if zeroed:
+                drone.up(0)
+        if e.axis == buttons.LEFT_X:
+            yaw = update(yaw, e.value * buttons.LEFT_X_REVERSE)
+            drone.set_yaw(yaw)
+            if zeroed:
+                drone.clockwise(0)
+        if e.axis == buttons.RIGHT_Y:
+            pitch = update(pitch, e.value * buttons.RIGHT_Y_REVERSE)
+            drone.set_pitch(pitch)
+            if zeroed:
+                drone.forward(0)
+        if e.axis == buttons.RIGHT_X:
+            roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
+            drone.set_roll(roll)
+            if zeroed:
+                drone.left(0)
+    elif e.type == pygame.locals.JOYHATMOTION:
+        if e.value[0] < 0:
+            drone.counter_clockwise(speed)
+        if e.value[0] == 0:
+            drone.clockwise(0)
+        if e.value[0] > 0:
+            drone.clockwise(speed)
+        if e.value[1] < 0:
+            drone.down(speed)
+        if e.value[1] == 0:
+            drone.up(0)
+        if e.value[1] > 0:
+            drone.up(speed)
+    elif e.type == pygame.locals.JOYBUTTONDOWN:
+        if e.button == buttons.LAND:
+            drone.land()
+        elif e.button == buttons.UP:
+            drone.up(speed)
+        elif e.button == buttons.DOWN:
+            drone.down(speed)
+        elif e.button == buttons.ROTATE_RIGHT:
+            drone.clockwise(speed)
+        elif e.button == buttons.ROTATE_LEFT:
+            drone.counter_clockwise(speed)
+        elif e.button == buttons.FORWARD:
+            drone.forward(speed)
+        elif e.button == buttons.BACKWARD:
+            drone.backward(speed)
+        elif e.button == buttons.RIGHT:
+            drone.right(speed)
+        elif e.button == buttons.LEFT:
+            drone.left(speed)
+    elif e.type == pygame.locals.JOYBUTTONUP:
+        if e.button == buttons.TAKEOFF:
+            if throttle != 0.0:
+                print('###')
+                print('### throttle != 0.0 (This may hinder the drone from taking off)')
+                print('###')
+            drone.takeoff()
+        elif e.button == buttons.UP:
+            drone.up(0)
+        elif e.button == buttons.DOWN:
+            drone.down(0)
+        elif e.button == buttons.ROTATE_RIGHT:
+            drone.clockwise(0)
+        elif e.button == buttons.ROTATE_LEFT:
+            drone.counter_clockwise(0)
+        elif e.button == buttons.FORWARD:
+            drone.forward(0)
+        elif e.button == buttons.BACKWARD:
+            drone.backward(0)
+        elif e.button == buttons.RIGHT:
+            drone.right(0)
+        elif e.button == buttons.LEFT:
+            drone.left(0)
 
 def toggle_recording(drone, speed):
     global video_recorder
@@ -218,6 +374,12 @@ def main():
     pygame.display.init()
     pygame.display.set_mode((1280, 720))
     pygame.font.init()
+    global buttons
+    #global run_recv_thread
+    #global new_image
+    #pygame.init()
+    pygame.joystick.init()
+    #current_image = None
 
     global font
     font = pygame.font.SysFont("dejavusansmono", 32)
@@ -226,6 +388,36 @@ def main():
     if 'window' in pygame.display.get_wm_info():
         wid = pygame.display.get_wm_info()['window']
     print("Tello video WID:", wid)
+
+    try:
+        js = pygame.joystick.Joystick(0)
+        js.init()
+        js_name = js.get_name()
+        print('Joystick name: ' + js_name)
+        if js_name in ('Wireless Controller', 'Sony Computer Entertainment Wireless Controller'):
+            buttons = JoystickPS4
+        elif js_name == 'Sony Interactive Entertainment Wireless Controller':
+            buttons = JoystickPS4ALT
+        elif js_name in ('PLAYSTATION(R)3 Controller', 'Sony PLAYSTATION(R)3 Controller'):
+            buttons = JoystickPS3
+        elif js_name in ('Logitech Gamepad F310'):
+            buttons = JoystickF310
+        elif js_name == 'Xbox One Wired Controller':
+            buttons = JoystickXONE
+        elif js_name == 'Controller (XBOX 360 For Windows)':
+            buttons = JoystickX360
+        elif js_name == 'Microsoft X-Box One S pad':
+            buttons = JoystickXONES
+        elif js_name == 'Xbox Wireless Controller':
+            buttons = JoystickXONES_WIRELESS
+        elif js_name == 'FrSky Taranis Joystick':
+            buttons = JoystickTARANIS
+    except pygame.error:
+        pass
+
+    if buttons is None:
+        print('no supported joystick found')
+        return
 
     drone = tellopy.Tello()
     drone.connect()
@@ -239,6 +431,7 @@ def main():
         while 1:
             time.sleep(0.01)  # loop with pygame.event.get() is too mush tight w/o some sleep
             for e in pygame.event.get():
+                handle_input_event(drone, e)
                 # WASD for movement
                 if e.type == pygame.locals.KEYDOWN:
                     print('+' + pygame.key.name(e.key))
