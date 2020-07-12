@@ -268,6 +268,12 @@ controls = {
     'z': toggle_zoom,
     'enter': take_picture,
     'return': take_picture,
+    '0': lambda drone, speed: drone.set_video_encoder_rate(0),
+    '1': lambda drone, speed: drone.set_video_encoder_rate(1),
+    '2': lambda drone, speed: drone.set_video_encoder_rate(2),
+    '3': lambda drone, speed: drone.set_video_encoder_rate(3),
+    '4': lambda drone, speed: drone.set_video_encoder_rate(4),
+    '5': lambda drone, speed: drone.set_video_encoder_rate(5),
 }
 
 class FlightDataDisplay(object):
