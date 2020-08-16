@@ -528,7 +528,8 @@ def main():
     drone = tellopy.Tello()
     drone.connect()
     drone.subscribe(drone.EVENT_FLIGHT_DATA, handler)
-    drone.subscribe(drone.EVENT_LOG_DATA, handler)
+    # need to rebuild tellopy from source to have access to EVENT_LOG_DATA
+    #drone.subscribe(drone.EVENT_LOG_DATA, handler)
     threading.Thread(target=recv_thread, args=[drone]).start()
 
     try:

@@ -274,6 +274,7 @@ controls = {
     '3': lambda drone, speed: drone.set_video_encoder_rate(3),
     '4': lambda drone, speed: drone.set_video_encoder_rate(4),
     '5': lambda drone, speed: drone.set_video_encoder_rate(5),
+    'f': lambda drone, speed: drone.toggle_fast_mode(),
 }
 
 class FlightDataDisplay(object):
@@ -347,7 +348,7 @@ def videoFrameHandler(event, sender, data):
     global video_player
     global video_recorder
     if video_player is None:
-        cmd = [ 'mplayer', '-fps', '35', '-really-quiet' ]
+        cmd = [ 'mplayer', '-fps', '35', '-really-quiet', '-fs' ]
         if wid is not None:
             cmd = cmd + [ '-wid', str(wid) ]
         video_player = Popen(cmd + ['-'], stdin=PIPE)
@@ -379,6 +380,7 @@ def main():
     pygame.init()
     pygame.display.init()
     pygame.display.set_mode((1280, 720))
+    # pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.font.init()
     global buttons
     pygame.joystick.init()
