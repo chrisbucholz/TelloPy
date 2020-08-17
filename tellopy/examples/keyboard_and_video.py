@@ -274,7 +274,8 @@ controls = {
     '3': lambda drone, speed: drone.set_video_encoder_rate(3),
     '4': lambda drone, speed: drone.set_video_encoder_rate(4),
     '5': lambda drone, speed: drone.set_video_encoder_rate(5),
-    'f': lambda drone, speed: drone.toggle_fast_mode(),
+    # Hmm. This just shuts the thing down.
+    # 'f': lambda drone, speed: drone.toggle_fast_mode(),
 }
 
 class FlightDataDisplay(object):
